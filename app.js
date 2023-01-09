@@ -1,4 +1,4 @@
-/* This Function creates the grid */
+/*-------------------------------- Add global variables here --------------------------------*/ 
 const gridSize = 4;  
 const calculatorKeys = [
     ["7", "8", "9", "+"], 
@@ -39,15 +39,21 @@ const currentNumberIsSecondNumber = 2;
 let currentNumber = currentNumberIsFirstNumber; 
 
 let numOfTerms = 0; 
+/*-------------------------------- End Global Variable Definition --------------------------------*/ 
 
+/*-------------------------------- Add User Functions here        --------------------------------*/ 
+
+/* This Function creates the grid using flex*/
 const grid = document.querySelector(".button_container"); 
 for (var i = 0; i < rows; ++i) {
     let row = document.createElement('button'); // create row
     row.id = 'row';
     for (var j = 0; j < columns; ++j) {
+        // The columns are actually the buttons of the calculator 
         let column = document.createElement('button'); // create column
         column.className = 'calculator_buttons';    
-        column.classList.add(calculatorKeyTypes[i][j]);             
+        column.classList.add(calculatorKeyTypes[i][j]);           
+        // I want the operator type buttons to have a different color   
         if(calculatorKeyTypes[i][j] == "Operator"){
             column.style.backgroundColor = "darkorange";
         }
@@ -60,6 +66,7 @@ for (var i = 0; i < rows; ++i) {
     listen();
 }   
 
+// Create Eventlisterners for every calculator button after they are initialised by JS 
 function listen(){
     const buttons = document.querySelectorAll(".calculator_buttons"); 
     buttons.forEach(calculator_buttons => calculator_buttons.addEventListener("click", display));
@@ -68,8 +75,7 @@ function listen(){
 function display(e){
 
     const dispText = document.querySelector("#calculator_display span");
-    const dispCalc = document.querySelector("#subText");
-    
+    const dispCalc = document.querySelector("#subText");  
     
 
     if(this.classList.contains("Operator")){  
@@ -206,7 +212,7 @@ function display(e){
         }
     }
 }
-
+/* This function shall handle the different operations */ 
 function operate(dispText, operator){
     console.log("Operating");
     console.log(operator);
@@ -221,7 +227,7 @@ function operate(dispText, operator){
     }
 }
 
-
+/* This functions clears the display and sets every global variable to its default value */ 
 function clearDisplay(e){
     const dispText = document.querySelector("#calculator_display span");
     const dispCalc = document.querySelector("#subText");
@@ -241,10 +247,13 @@ function clearDisplay(e){
     enableOperationCounter = 0; 
 }
 
+/* This functions deletes the last number to be entered on the display and sets the needed global variable to its default value */ 
+
 function deleteLastDigit(e){
     const dispText = document.querySelector("#calculator_display span");
     const dispCalc = document.querySelector("#subText");
 
+    //Check the maximum range for delete 
     if(dispText.textContent.length <=1){
         dispText.textContent = "0";
         if(dispCalc.textContent.length <= 1){
@@ -273,6 +282,7 @@ function deleteLastDigit(e){
     }
 }
 
+// Mathematical operations 
 const add = function(a, b) {  
     //Check if input is floating point 
     let result = a + b;

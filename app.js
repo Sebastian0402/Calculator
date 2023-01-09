@@ -20,15 +20,21 @@ let rows = gridSize;
 
 let storeFirstNumber = undefined;  
 let storeSecondNumber = undefined; 
+let storefirstFirstNumber = undefined;
 let storeOperator = undefined; 
+let storePrevOperator = undefined; 
 let result = undefined; 
-let storeSubTextFirstNumber = undefined; 
-let storeSubTextSecondNumber = undefined; 
+let storeSubTextFirstNumber = ""; 
+let storeSubTextSecondNumber = ""; 
 
 let floatingInput = ""; 
 // If enableOperationCounter increments with every "button" pushed. If it exceeds 2 OR 3 depending on the opeartor, it will reset and enable the operation
 let enableOperationCounter = 0;  
 let enableOperation = 0; 
+
+const currentNumberIsFirstNumber = 1;
+const currentNumberIsSecondNumber = 2; 
+let currentNumber = currentNumberIsFirstNumber; 
 
 const grid = document.querySelector(".button_container"); 
 for (var i = 0; i < rows; ++i) {
@@ -57,78 +63,100 @@ function display(e){
 
     const dispText = document.querySelector("#calculator_display span");
     const dispCalc = document.querySelector("#subText");
+    
+    
 
-    if(dispText.classList.contains("InitMode")){
-        dispText.textContent = this.textContent;
-        storeSubTextFirstNumber = this.textContent; 
-        dispText.classList.remove("InitMode");
-        dispCalc.classList.add("InitMode"); 
-    }else{
-        if(dispCalc.classList.contains("InitMode")){
-            dispCalc.textContent = storeSubTextFirstNumber; 
-            dispCalc.classList.remove("InitMode"); 
-        }
-        dispCalc.textContent = dispCalc.textContent + " " + this.textContent;
-        
-    }
     if(this.classList.contains("Operator")){  
+        dispCalc.textContent = dispCalc.textContent + " " + this.textContent + " ";
+        //Operator as Input => Handle Storage of Input numbers 
         //Check if second number was floating point input 
-        if(storeSubTextSecondNumber != undefined){
+        if(currentNumber === currentNumberIsFirstNumber){
+            storeFirstNumber = parseFloat(storeSubTextFirstNumber); 
+            console.log("First Number Stored: " + storeSubTextFirstNumber);
+            currentNumber = currentNumberIsSecondNumber;
+        }else{
             storeSecondNumber = parseFloat(storeSubTextSecondNumber); 
-            operate(dispText, storeOperator);
-        }          
+            console.log("Second Number Stored");            
+        }            
+                  
         storeOperator = this.textContent;  
         //End of possible floating Input 
         dispCalc.classList.remove("FloatInput");  
         // Check if Chained Operation, Then do Calculation until now 
         if(enableOperationCounter > 0){
-            if(storeOperator === "+" || storeOperator === "-"){
+            //If current Operator is + or -, consideration of the first operator type is not needed  
+            if( (storeOperator === "+") || (storeOperator === "-") ){
                 operate(dispText, "=");
                 storeFirstNumber = result; 
                 storeSecondNumber = undefined; 
-                storeSubTextFirstNumber = undefined; 
-                storeSubTextSecondNumber = undefined; 
+                storeSubTextFirstNumber = ""; 
+                storeSubTextSecondNumber = ""; 
                 enableOperationCounter = 0; 
+            }
+            //If current Operator is * or /, consideration of the first operator type is needed  
+            if( (storeOperator === "x") || (storeOperator === "/") ){
+                //If prev operator was "x" or "/", then "standard chaining"
+                if((storePrevOperator === "x") || (storePrevOperator === "/") ){
+                    operate(dispText, "=");
+                    storeFirstNumber = result; 
+                    storeSecondNumber = undefined; 
+                    storeSubTextFirstNumber = undefined; 
+                    storeSubTextSecondNumber = undefined; 
+                    enableOperationCounter = 0; 
+                }
+                //If prev operator was "+" or "-", then the right order has to be considered
+                if( (storeOperator === "+") || (storeOperator === "-") ){
+                    //Mul/Div has to be done first => Save first number for later, set second number to first number and wait for second number 
+                    if(enableOperationCounter < 2){
+                        storefirstFirstNumber = storeFirstNumber; 
+                        storeFirstNumber = storeSecondNumber; 
+                        storeSecondNumber = undefined; 
+                    }else{
+                        //Mul/Div Operation was already executed. 
+                        operate(dispText, "=");
+                        //Change back order 
+                        storeFirstNumber = storefirstFirstNumber;
+                        storeSecondNumber = result; 
+                        console.log(result);
+                        storeSubTextFirstNumber = undefined; 
+                        storeSubTextSecondNumber = undefined; 
+                        enableOperationCounter = 0; 
+                    }
+                }
+                
             }
         }
         
         if(this.textContent === "="){
+            operate(dispText, storePrevOperator); 
             operate(dispText, storeOperator);
             enableOperationCounter = 0; 
         }
+
+        storePrevOperator = storeOperator; 
         enableOperationCounter  ++;                   
     }else{
-        // Enable float input 
-        if(this.textContent === "."){
-            dispCalc.classList.add("FloatInput");           
-        }
+        /* ----- Regular Number as Input ------*/
+        dispCalc.textContent = dispCalc.textContent + this.textContent;       
         // Currently First Number
-        if(storeFirstNumber === undefined){
-            storeSubTextFirstNumber = this.textContent;
-            storeFirstNumber = parseFloat(this.textContent); 
-            console.log("First Number Stored")
-        }else{
-            // Currently Second Number OR floating Point Input for First Number
-            if(storeSecondNumber===undefined){
-                //Floating Point Input for First Number 
-                if(dispCalc.classList.contains("FloatInput")){
-                    storeSubTextFirstNumber = storeSubTextFirstNumber + this.textContent;
-                }else{ //Currently Second Number Input 
-                    //Check, if something has been written in the store for the floating Point input for the first number, if so store the floating Point input
-                    if(storeSubTextFirstNumber != undefined){
-                        storeFirstNumber = parseFloat(storeSubTextFirstNumber); 
-                    }
-                    storeSubTextSecondNumber = this.textContent;
-                    storeSecondNumber = parseFloat(this.textContent); 
-                    console.log("Sec. Number Stored")   
-                    operate(dispText, storeOperator); 
-                }                           
-            }else{//Floating Point input for second number
-                storeSubTextSecondNumber = storeSubTextSecondNumber + this.textContent;
-            }            
+        if(currentNumber === currentNumberIsFirstNumber){
+            storeSubTextFirstNumber = storeSubTextFirstNumber + this.textContent;
+            dispText.textContent = storeSubTextFirstNumber;            
+        }else{                
+            storeSubTextSecondNumber = storeSubTextSecondNumber + this.textContent;      
+            dispText.textContent = storeSubTextSecondNumber;                         
+        } 
+    }    
+
+    /*------- Handle Display Output ----------*/ 
+    if(dispText.classList.contains("InitMode")){
+        dispText.classList.remove("InitMode");
+        dispCalc.classList.add("InitMode"); 
+    }else{
+        if(dispCalc.classList.contains("InitMode")){
+            dispCalc.classList.remove("InitMode"); 
         }
     }
-    
 }
 
 function operate(dispText, operator){
@@ -156,9 +184,11 @@ function clearDisplay(e){
     storeFirstNumber = undefined;
     storeSecondNumber = undefined; 
     storeOperator = undefined;
-    storeSubTextFirstNumber = undefined; 
-    storeSubTextSecondNumber = undefined; 
+    storeSubTextFirstNumber = ""; 
+    storeSubTextSecondNumber = ""; 
     result = undefined;
+
+    currentNumber = currentNumberIsFirstNumber;
 
     enableOperationCounter = 0; 
 }

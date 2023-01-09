@@ -54,6 +54,7 @@ function listen(){
 }
 
 function display(e){
+
     const dispText = document.querySelector("#calculator_display span");
     const dispCalc = document.querySelector("#subText");
 
@@ -74,15 +75,28 @@ function display(e){
         //Check if second number was floating point input 
         if(storeSubTextSecondNumber != undefined){
             storeSecondNumber = parseFloat(storeSubTextSecondNumber); 
-            operate(dispText);
+            operate(dispText, storeOperator);
         }          
         storeOperator = this.textContent;  
         //End of possible floating Input 
         dispCalc.classList.remove("FloatInput");  
-         
+        // Check if Chained Operation, Then do Calculation until now 
+        if(enableOperationCounter > 0){
+            if(storeOperator === "+" || storeOperator === "-"){
+                operate(dispText, "=");
+                storeFirstNumber = result; 
+                storeSecondNumber = undefined; 
+                storeSubTextFirstNumber = undefined; 
+                storeSubTextSecondNumber = undefined; 
+                enableOperationCounter = 0; 
+            }
+        }
+        
         if(this.textContent === "="){
-            operate(dispText); 
-        }                   
+            operate(dispText, storeOperator);
+            enableOperationCounter = 0; 
+        }
+        enableOperationCounter  ++;                   
     }else{
         // Enable float input 
         if(this.textContent === "."){
@@ -107,7 +121,7 @@ function display(e){
                     storeSubTextSecondNumber = this.textContent;
                     storeSecondNumber = parseFloat(this.textContent); 
                     console.log("Sec. Number Stored")   
-                    operate(dispText); 
+                    operate(dispText, storeOperator); 
                 }                           
             }else{//Floating Point input for second number
                 storeSubTextSecondNumber = storeSubTextSecondNumber + this.textContent;
@@ -117,10 +131,10 @@ function display(e){
     
 }
 
-function operate(dispText){
+function operate(dispText, operator){
     console.log("Operating");
-    console.log(storeOperator);
-    switch (storeOperator) {
+    console.log(operator);
+    switch (operator) {
         case "+": result = add(storeFirstNumber, storeSecondNumber); console.log(result); break;
         case "-": result = subtract(storeFirstNumber, storeSecondNumber); break; 
         case "x": result = multiply(storeFirstNumber, storeSecondNumber);break; 
@@ -130,6 +144,8 @@ function operate(dispText){
             break; 
     }
 }
+
+
 function clearDisplay(e){
     const dispText = document.querySelector("#calculator_display span");
     const dispCalc = document.querySelector("#subText");
@@ -142,6 +158,9 @@ function clearDisplay(e){
     storeOperator = undefined;
     storeSubTextFirstNumber = undefined; 
     storeSubTextSecondNumber = undefined; 
+    result = undefined;
+
+    enableOperationCounter = 0; 
 }
 
 function deleteLastDigit(e){

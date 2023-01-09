@@ -67,7 +67,7 @@ function display(e){
             dispCalc.textContent = storeSubTextFirstNumber; 
             dispCalc.classList.remove("InitMode"); 
         }
-        dispCalc.textContent = dispCalc.textContent + this.textContent;
+        dispCalc.textContent = dispCalc.textContent + " " + this.textContent;
         
     }
     if(this.classList.contains("Operator")){  

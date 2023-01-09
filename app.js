@@ -23,6 +23,8 @@ let storeSecondNumber = undefined;
 let storefirstFirstNumber = undefined;
 let storeOperator = undefined; 
 let storePrevOperator = undefined; 
+let storeFirstOperator = undefined; 
+
 let result = undefined; 
 let storeSubTextFirstNumber = ""; 
 let storeSubTextSecondNumber = ""; 
@@ -30,11 +32,13 @@ let storeSubTextSecondNumber = "";
 let floatingInput = ""; 
 // If enableOperationCounter increments with every "button" pushed. If it exceeds 2 OR 3 depending on the opeartor, it will reset and enable the operation
 let enableOperationCounter = 0;  
-let enableOperation = 0; 
+let operationPending = 0; 
 
 const currentNumberIsFirstNumber = 1;
 const currentNumberIsSecondNumber = 2; 
 let currentNumber = currentNumberIsFirstNumber; 
+
+let numOfTerms = 0; 
 
 const grid = document.querySelector(".button_container"); 
 for (var i = 0; i < rows; ++i) {
@@ -67,6 +71,7 @@ function display(e){
     
 
     if(this.classList.contains("Operator")){  
+        dispCalc.classList.add("AllowReducingOnce");
         dispCalc.textContent = dispCalc.textContent + " " + this.textContent + " ";
         //Operator as Input => Handle Storage of Input numbers 
         //Check if second number was floating point input 
@@ -74,52 +79,80 @@ function display(e){
             storeFirstNumber = parseFloat(storeSubTextFirstNumber); 
             console.log("First Number Stored: " + storeSubTextFirstNumber);
             currentNumber = currentNumberIsSecondNumber;
-        }else{
+        }else{ 
             storeSecondNumber = parseFloat(storeSubTextSecondNumber); 
-            console.log("Second Number Stored");            
+            console.log("Second Number Stored: " + storeSubTextSecondNumber);      
+            currentNumber = currentNumberIsFirstNumber;      
         }            
-                  
+    
+        
         storeOperator = this.textContent;  
+        if((storeOperator === "x") || (storeOperator === "/") ){
+            operationPending = 1; // After a second number is put in, theoretically an operation might be pending
+        }
         //End of possible floating Input 
         dispCalc.classList.remove("FloatInput");  
         // Check if Chained Operation, Then do Calculation until now 
         if(enableOperationCounter > 0){
             //If current Operator is + or -, consideration of the first operator type is not needed  
             if( (storeOperator === "+") || (storeOperator === "-") ){
-                operate(dispText, "=");
+                console.log("92 is Pending?: " +  operationPending);
+                if((enableOperationCounter > 1) || (operationPending != 0) ){
+                    console.log("OP Pending");
+                    operate(dispText, storePrevOperator);
+                    storeFirstNumber = storefirstFirstNumber; 
+                    storeSecondNumber = result;
+                    operate(dispText, storeFirstOperator); 
+                    operate(dispText, "="); 
+                }else{
+                    operate(dispText, storePrevOperator);
+                    operate(dispText, "="); 
+                }                
                 storeFirstNumber = result; 
-                storeSecondNumber = undefined; 
+                storeSecondNumber = undefined;
+                currentNumber = currentNumberIsSecondNumber; 
                 storeSubTextFirstNumber = ""; 
                 storeSubTextSecondNumber = ""; 
-                enableOperationCounter = 0; 
+                enableOperationCounter = 0;
+                operationPending = 0;  
             }
             //If current Operator is * or /, consideration of the first operator type is needed  
             if( (storeOperator === "x") || (storeOperator === "/") ){
                 //If prev operator was "x" or "/", then "standard chaining"
-                if((storePrevOperator === "x") || (storePrevOperator === "/") ){
+                if((storePrevOperator === "x") || (storePrevOperator === "/") ){                    
+                    operate(dispText, storePrevOperator);
                     operate(dispText, "=");
                     storeFirstNumber = result; 
                     storeSecondNumber = undefined; 
-                    storeSubTextFirstNumber = undefined; 
-                    storeSubTextSecondNumber = undefined; 
+                    currentNumber = currentNumberIsSecondNumber; 
+                    storeSubTextFirstNumber = ""; 
+                    storeSubTextSecondNumber = ""; 
                     enableOperationCounter = 0; 
                 }
                 //If prev operator was "+" or "-", then the right order has to be considered
-                if( (storeOperator === "+") || (storeOperator === "-") ){
+                if( (storePrevOperator === "+") || (storePrevOperator === "-") ){
                     //Mul/Div has to be done first => Save first number for later, set second number to first number and wait for second number 
                     if(enableOperationCounter < 2){
+                        console.log(118);
                         storefirstFirstNumber = storeFirstNumber; 
                         storeFirstNumber = storeSecondNumber; 
+                        storeFirstOperator = storePrevOperator; 
                         storeSecondNumber = undefined; 
+                        storeSubTextSecondNumber = "";
+                        currentNumber = currentNumberIsSecondNumber;
                     }else{
                         //Mul/Div Operation was already executed. 
+                        console.log(126);
+                        operate(dispText, storePrevOperator);
                         operate(dispText, "=");
                         //Change back order 
                         storeFirstNumber = storefirstFirstNumber;
                         storeSecondNumber = result; 
+                        operate(dispText, storeFirstOperator);
                         console.log(result);
-                        storeSubTextFirstNumber = undefined; 
-                        storeSubTextSecondNumber = undefined; 
+                        storeSubTextFirstNumber =""; 
+                        storeSubTextSecondNumber = "";
+                        currentNumber = currentNumberIsFirstNumber; 
                         enableOperationCounter = 0; 
                     }
                 }
@@ -128,8 +161,21 @@ function display(e){
         }
         
         if(this.textContent === "="){
-            operate(dispText, storePrevOperator); 
-            operate(dispText, storeOperator);
+            console.log("Counter: " + enableOperationCounter);
+            if(enableOperationCounter > 1){
+                console.log("158");
+                operate(dispText, storePrevOperator);
+                console.log(result);
+                //Change back order 
+                storeFirstNumber = storefirstFirstNumber;
+                storeSecondNumber = result; 
+                operate(dispText, storeFirstOperator);
+                operate(dispText, "=");
+            }else{
+                console.log("166");
+                operate(dispText, storePrevOperator); 
+                operate(dispText, storeOperator);
+            }           
             enableOperationCounter = 0; 
         }
 
@@ -163,10 +209,10 @@ function operate(dispText, operator){
     console.log("Operating");
     console.log(operator);
     switch (operator) {
-        case "+": result = add(storeFirstNumber, storeSecondNumber); console.log(result); break;
-        case "-": result = subtract(storeFirstNumber, storeSecondNumber); break; 
-        case "x": result = multiply(storeFirstNumber, storeSecondNumber);break; 
-        case "/": result = devide(storeFirstNumber, storeSecondNumber);break; 
+        case "+": result = add(parseFloat(storeFirstNumber), parseFloat(storeSecondNumber)); console.log(result); break;
+        case "-": result = subtract(parseFloat(storeFirstNumber), parseFloat(storeSecondNumber)); break; 
+        case "x": result = multiply(parseFloat(storeFirstNumber), parseFloat(storeSecondNumber));break; 
+        case "/": result = devide(parseFloat(storeFirstNumber), parseFloat(storeSecondNumber));break; 
         case "=": 
             dispText.textContent = result; 
             break; 
@@ -177,7 +223,7 @@ function operate(dispText, operator){
 function clearDisplay(e){
     const dispText = document.querySelector("#calculator_display span");
     const dispCalc = document.querySelector("#subText");
-
+    dispCalc.classList.remove("AllowReducingOnce");
     dispText.textContent = "0";
     dispCalc.textContent = ""; 
     dispText.classList.add("InitMode"); 
@@ -195,45 +241,60 @@ function clearDisplay(e){
 
 function deleteLastDigit(e){
     const dispText = document.querySelector("#calculator_display span");
+    const dispCalc = document.querySelector("#subText");
+
     if(dispText.textContent.length <=1){
         dispText.textContent = "0";
+        if(dispCalc.textContent.length <= 1){
+            dispCalc.textContent = "";
+        }else{
+            if(dispCalc.classList.contains("AllowReducingOnce")){
+                dispCalc.textContent = dispCalc.textContent.slice(0, -1);
+                dispCalc.classList.remove("AllowReducingOnce");
+            }
+        }
+
         dispText.classList.add("InitMode"); 
+        if(currentNumber == currentNumberIsFirstNumber){
+            storeSubTextFirstNumber = ""; 
+        }else{
+            storeSubTextSecondNumber = ""; 
+        }        
     }else{
-        dispText.textContent = dispText.textContent .slice(0, -1); 
+        dispText.textContent = dispText.textContent.slice(0, -1); 
+        dispCalc.textContent = dispCalc.textContent.slice(0, -1);
+        if(currentNumber == currentNumberIsFirstNumber){
+            storeSubTextFirstNumber = storeSubTextFirstNumber.slice(0, -1); 
+        }else{
+            storeSubTextSecondNumber = storeSubTextSecondNumber.slice(0, -1); 
+        }
     }
 }
 
 const add = function(a, b) {  
     //Check if input is floating point 
-    if((a % 1 != 0) || (b %1 != 0)){
-        return (a + b).toFixed(3);
-    }
-	return a + b; 
+    let result = a + b;
+    result = Math.round(result * 1000)/1000;
+    return result;	
 };
 
 const subtract = function(a,b) {
-    //Check if input is floating point 
-    if((a % 1 != 0) || (b %1 != 0)){
-        return (a - b).toFixed(3);
-    }
-  return a - b; 
+    let result = a - b;
+    result = Math.round(result * 1000)/1000;
+    return result;	
 }
 
 const multiply = function(a, b) {
-    //Check if input is floating point 
-    if((a % 1 != 0) || (b %1 != 0)){
-        return (a * b).toFixed(3);
-    }
-   return (a * b); 
+    let result = a * b;
+    result = Math.round(result * 1000)/1000;
+    return result;	
 }
 
 const devide = function(a, b) {
      //Check if result is floating point 
-    let result = a/b; 
-    if(result % 1 != 0){
-        return result.toFixed(3);
-    }
-    return result; 
+     let result = a / b;
+     result = Math.round(result * 1000)/1000;
+     return result;	
 }
 
 

@@ -62,11 +62,11 @@ body{
 
 #deleteBTN{
     margin-left: 5px;
-    background-color: cornflowerblue;
+    background-color: indianred;
 }
 
 #clearBTN{
-    background-color: lightcoral;
+    background-color: burlywood;
 }
 
 .button_container{
@@ -92,4 +92,6 @@ body{
     text-align: center;
     align-items: center;
     justify-content: center;
+    background-color: darkslateblue;
+    color: azure;
 }

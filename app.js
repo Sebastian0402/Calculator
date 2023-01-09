@@ -23,7 +23,9 @@ let storeSecondNumber = undefined;
 let storeOperator = undefined; 
 let result = undefined; 
 let storeSubTextFirstNumber = undefined; 
+let storeSubTextSecondNumber = undefined; 
 
+let floatingInput = ""; 
 // If enableOperationCounter increments with every "button" pushed. If it exceeds 2 OR 3 depending on the opeartor, it will reset and enable the operation
 let enableOperationCounter = 0;  
 let enableOperation = 0; 
@@ -68,20 +70,47 @@ function display(e){
         dispCalc.textContent = dispCalc.textContent + this.textContent;
         
     }
-    if(this.classList.contains("Operator")){        
+    if(this.classList.contains("Operator")){  
+        //Check if second number was floating point input 
+        if(storeSubTextSecondNumber != undefined){
+            storeSecondNumber = parseFloat(storeSubTextSecondNumber); 
+            operate(dispText);
+        }          
         storeOperator = this.textContent;  
+        //End of possible floating Input 
+        dispCalc.classList.remove("FloatInput");  
+         
         if(this.textContent === "="){
             operate(dispText); 
         }                   
     }else{
+        // Enable float input 
+        if(this.textContent === "."){
+            dispCalc.classList.add("FloatInput");           
+        }
+        // Currently First Number
         if(storeFirstNumber === undefined){
-            storeFirstNumber = parseInt(this.textContent); 
+            storeSubTextFirstNumber = this.textContent;
+            storeFirstNumber = parseFloat(this.textContent); 
             console.log("First Number Stored")
         }else{
-            if(storeOperator!=undefined){
-                storeSecondNumber = parseInt(this.textContent); 
-                console.log("Sec. Number Stored")   
-                operate(dispText);             
+            // Currently Second Number OR floating Point Input for First Number
+            if(storeSecondNumber===undefined){
+                //Floating Point Input for First Number 
+                if(dispCalc.classList.contains("FloatInput")){
+                    storeSubTextFirstNumber = storeSubTextFirstNumber + this.textContent;
+                }else{ //Currently Second Number Input 
+                    //Check, if something has been written in the store for the floating Point input for the first number, if so store the floating Point input
+                    if(storeSubTextFirstNumber != undefined){
+                        storeFirstNumber = parseFloat(storeSubTextFirstNumber); 
+                    }
+                    storeSubTextSecondNumber = this.textContent;
+                    storeSecondNumber = parseFloat(this.textContent); 
+                    console.log("Sec. Number Stored")   
+                    operate(dispText); 
+                }                           
+            }else{//Floating Point input for second number
+                storeSubTextSecondNumber = storeSubTextSecondNumber + this.textContent;
             }            
         }
     }
@@ -90,9 +119,9 @@ function display(e){
 
 function operate(dispText){
     console.log("Operating");
-
+    console.log(storeOperator);
     switch (storeOperator) {
-        case "+": result = add(storeFirstNumber, storeSecondNumber); break;
+        case "+": result = add(storeFirstNumber, storeSecondNumber); console.log(result); break;
         case "-": result = subtract(storeFirstNumber, storeSecondNumber); break; 
         case "x": result = multiply(storeFirstNumber, storeSecondNumber);break; 
         case "/": result = devide(storeFirstNumber, storeSecondNumber);break; 
@@ -110,7 +139,9 @@ function clearDisplay(e){
     dispText.classList.add("InitMode"); 
     storeFirstNumber = undefined;
     storeSecondNumber = undefined; 
-    storeOperator = undefined; 
+    storeOperator = undefined;
+    storeSubTextFirstNumber = undefined; 
+    storeSubTextSecondNumber = undefined; 
 }
 
 function deleteLastDigit(e){
@@ -123,21 +154,37 @@ function deleteLastDigit(e){
     }
 }
 
-const add = function(a, b) {
+const add = function(a, b) {  
+    //Check if input is floating point 
+    if((a % 1 != 0) || (b %1 != 0)){
+        return (a + b).toFixed(3);
+    }
 	return a + b; 
 };
 
 const subtract = function(a,b) {
+    //Check if input is floating point 
+    if((a % 1 != 0) || (b %1 != 0)){
+        return (a - b).toFixed(3);
+    }
   return a - b; 
 }
 
 const multiply = function(a, b) {
-    /* loop through array and remove item */ 
-   return a * b; 
+    //Check if input is floating point 
+    if((a % 1 != 0) || (b %1 != 0)){
+        return (a * b).toFixed(3);
+    }
+   return (a * b); 
 }
 
 const devide = function(a, b) {
-    return a / b; 
+     //Check if result is floating point 
+    let result = a/b; 
+    if(result % 1 != 0){
+        return result.toFixed(3);
+    }
+    return result; 
 }
 
 

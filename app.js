@@ -48,7 +48,9 @@ for (var i = 0; i < rows; ++i) {
         let column = document.createElement('button'); // create column
         column.className = 'calculator_buttons';    
         column.classList.add(calculatorKeyTypes[i][j]);             
-                 
+        if(calculatorKeyTypes[i][j] == "Operator"){
+            column.style.backgroundColor = "darkorange";
+        }
         column.textContent = calculatorKeys[i][j];     
         row.appendChild(column); // append row in column
     }
